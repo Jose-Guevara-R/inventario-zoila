@@ -3,117 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrar Instrumento - Zoila Hora</title>
+    <title>Alta Patrimonial - Zoila Hora</title>
     <link rel="stylesheet" href="styles.css">
     
-    <!-- SCRIPT DE SEGURIDAD -->
+    <!-- 1. LIBRERÍA PARA COMPRIMIR IMÁGENES -->
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+
     <script>
-        if (!sessionStorage.getItem('usuario_autorizado')) {
-            window.location.href = 'login.html';
-        }
+        if (!sessionStorage.getItem('usuario_autorizado')) window.location.href = 'login.html';
     </script>
+    <style>
+        .form-section-title {
+            background: #f1f5f9; padding: 10px; border-left: 5px solid var(--primary);
+            margin: 20px 0 10px 0; font-weight: bold; color: var(--secondary);
+        }
+        .row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .row .form-group { flex: 1; min-width: 200px; }
+    </style>
 </head>
 <body>
     <header>
-        <h1>Registrar Nuevo Instrumento</h1>
-        <a href="index.html" style="color: white; text-decoration: underline; font-size: 0.9rem;">&larr; Volver al Inventario</a>
+        <h1>Alta de Bien Patrimonial</h1>
+        <a href="index.html" style="color: white; text-decoration: underline;">&larr; Cancelar y Volver</a>
     </header>
 
-    <div class="form-container">
+    <div class="form-container" style="max-width: 800px;">
         <form id="registro-form">
-            <!-- Sección A: Información -->
-            <div class="form-group">
-                <label>Nombre del Instrumento *</label>
-                <input type="text" name="nombre" placeholder="Ej: Saxofón Alto" required>
+            <!-- SECCIÓN 1 -->
+            <div class="form-section-title">1. Identificación del Bien</div>
+            <div class="row">
+                <div class="form-group">
+                    <label>Código Patrimonial</label>
+                    <input type="text" name="codigo_patrimonial" placeholder="Ej: 392205190001">
+                </div>
+                <div class="form-group">
+                    <label>Denominación (Nombre) *</label>
+                    <input type="text" name="nombre" required placeholder="Ej: SAXO ALTO">
+                </div>
             </div>
-            
-            <div class="form-group">
-                <label>Marca</label>
-                <input type="text" name="marca" placeholder="Ej: Yamaha">
-            </div>
-
-            <div class="form-group">
-                <label>Número de Serie</label>
-                <input type="text" name="serie" placeholder="S/N">
-            </div>
-
-            <!-- Sección B: Estado -->
-            <div class="form-group">
-                <label>Estado Inicial *</label>
-                <select name="estado" required>
-                    <option value="NUEVO">Nuevo</option>
-                    <option value="BUENO">Bueno (Usado)</option>
-                    <option value="REGULAR">Regular</option>
-                    <option value="MALO">Malo (Requiere reparación)</option>
-                </select>
+            <div class="row">
+                <div class="form-group"><label>Marca</label><input type="text" name="marca"></div>
+                <div class="form-group"><label>Modelo</label><input type="text" name="modelo"></div>
+                <div class="form-group"><label>Serie</label><input type="text" name="serie"></div>
             </div>
 
+            <!-- SECCIÓN 2 -->
+            <div class="form-section-title">2. Características Físicas</div>
+            <div class="row">
+                <div class="form-group"><label>Tipo / Material</label><input type="text" name="tipo"></div>
+                <div class="form-group"><label>Color</label><input type="text" name="color"></div>
+                <div class="form-group"><label>Dimensiones</label><input type="text" name="dimensiones"></div>
+            </div>
             <div class="form-group">
-                <label>Fecha de Adquisición *</label>
-                <input type="date" name="fecha_adquisicion" required>
+                <label>Otras Características</label>
+                <input type="text" name="otras_caracteristicas">
             </div>
 
+            <!-- SECCIÓN 3 -->
+            <div class="form-section-title">3. Estado y Administración</div>
+            <div class="row">
+                <div class="form-group"><label>Año Ingreso</label><input type="number" name="anio_ingreso"></div>
+                <div class="form-group"><label>Valor (S/.)</label><input type="number" step="0.01" name="valor"></div>
+                <div class="form-group"><label>Procedencia</label><input type="text" name="procedencia"></div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label>Situación *</label>
+                    <select name="situacion">
+                        <option value="Uso">En Uso</option>
+                        <option value="Desuso">En Desuso</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Estado *</label>
+                    <select name="estado">
+                        <option value="NUEVO">Nuevo</option>
+                        <option value="BUENO">Bueno</option>
+                        <option value="REGULAR">Regular</option>
+                        <option value="MALO">Malo</option>
+                        <option value="BAJA">Para Baja</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group"><label>Ubicación</label><input type="text" name="ubicacion" value="DEP. MÚSICA"></div>
+                <div class="form-group"><label>Responsable</label><input type="text" name="responsable" value="Prof. Música"></div>
+            </div>
             <div class="form-group">
-                <label>Origen</label>
-                <select name="origen">
-                    <option value="COMPRA">Compra Colegio</option>
-                    <option value="DONACION">Donación</option>
-                    <option value="MINISTERIO">Ministerio (MINEDU)</option>
-                </select>
+                <label>Observaciones</label>
+                <textarea name="observaciones" rows="2" style="width:100%"></textarea>
             </div>
 
-            <!-- Sección C: Foto -->
-            <div class="form-group" style="background: #f1f5f9; padding: 1rem; border-radius: 6px;">
-                <label>Fotografía (Opcional)</label>
-                <input type="file" id="foto-input" accept="image/*">
-                <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Se subirá automáticamente.</p>
+            <!-- SECCIÓN 4: FOTO OPTIMIZADA -->
+            <div class="form-group" style="background: #e0f2fe; padding: 15px; border-radius: 8px; margin-top:15px; border: 1px dashed #0284c7;">
+                <label style="color:#0369a1; font-weight:bold;">📸 Fotografía (Cámara o Galería)</label>
+                <!-- accept="image/*" permite abrir la cámara en móviles -->
+                <input type="file" id="foto-input" accept="image/*" style="margin-top:10px;">
+                <p style="font-size: 0.8rem; color: #0369a1; margin-top: 5px;">
+                    ⚡ La imagen se comprimirá automáticamente para ahorrar datos.
+                </p>
             </div>
 
-            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
-                Guardar Instrumento
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px; padding: 15px;">
+                💾 GUARDAR REGISTRO
             </button>
         </form>
     </div>
 
-    <!-- LÓGICA ESPECÍFICA DE REGISTRO -->
     <script>
-        // CONFIGURACIÓN CLOUDINARY (ASEGÚRATE DE COPIAR TUS DATOS AQUÍ TAMBIÉN)
-        const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/TU_CLOUD_NAME/image/upload';
-        const CLOUDINARY_PRESET = 'TU_UPLOAD_PRESET'; 
+        const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/doqix96et/image/upload';
+        const CLOUDINARY_PRESET = 'inventario_preset'; 
 
         document.getElementById('registro-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button');
             const txt = btn.innerText;
             btn.disabled = true;
-            btn.innerText = "Procesando...";
+            btn.innerText = "Optimizando foto y guardando...";
 
             const fileInput = document.getElementById('foto-input');
             let imageUrl = '';
 
-            // 1. Subir Imagen
             if (fileInput.files.length > 0) {
-                const formDataImg = new FormData();
-                formDataImg.append('file', fileInput.files[0]);
-                formDataImg.append('upload_preset', CLOUDINARY_PRESET);
+                const imageFile = fileInput.files[0];
+                
+                // OPCIONES DE COMPRESIÓN
+                const options = {
+                    maxSizeMB: 0.5,          // Máximo 0.5 MB (500KB)
+                    maxWidthOrHeight: 1200,  // Redimensionar si es gigante
+                    useWebWorker: true
+                };
 
                 try {
-                    btn.innerText = "Subiendo foto...";
+                    // 1. Comprimir
+                    btn.innerText = "Comprimiendo imagen...";
+                    const compressedFile = await imageCompression(imageFile, options);
+                    
+                    // 2. Subir
+                    btn.innerText = "Subiendo a la nube...";
+                    const formDataImg = new FormData();
+                    formDataImg.append('file', compressedFile);
+                    formDataImg.append('upload_preset', CLOUDINARY_PRESET);
+
                     const resImg = await fetch(CLOUDINARY_URL, { method: 'POST', body: formDataImg });
                     const dataImg = await resImg.json();
                     if(dataImg.secure_url) imageUrl = dataImg.secure_url;
+
                 } catch (err) {
-                    console.error("Error imagen", err);
+                    console.error("Error foto:", err);
+                    alert("Error al procesar la foto, se guardará sin imagen.");
                 }
             }
 
-            // 2. Guardar en BD
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData.entries());
             data.imagen_url = imageUrl;
+            data.fecha_adquisicion = new Date().toISOString().split('T')[0];
 
             try {
-                btn.innerText = "Guardando...";
+                btn.innerText = "Guardando datos...";
                 const response = await fetch('/api/add-instrument', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -121,10 +169,10 @@
                 });
                 
                 if (response.ok) {
-                    alert('¡Registrado con éxito!');
+                    alert('¡Registro Exitoso!');
                     window.location.href = 'index.html';
                 } else {
-                    alert('Error en el servidor');
+                    alert('Error del servidor');
                     btn.disabled = false;
                     btn.innerText = txt;
                 }

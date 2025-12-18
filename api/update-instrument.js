@@ -1,4 +1,3 @@
-// api/update-instrument.js
 const pool = require('./db');
 
 module.exports = async (req, res) => {
@@ -6,31 +5,41 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'PUT, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  const { id, nombre, marca, modelo, serie, estado, fecha_adquisicion, origen, ubicacion, imagen_url } = req.body;
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
+    const { 
+      id, nombre, marca, modelo, serie, estado, fecha_adquisicion, ubicacion, imagen_url,
+      codigo_patrimonial, tipo, color, dimensiones, otras_caracteristicas, situacion, observaciones, responsable,
+      origen, procedencia, anio_ingreso, valor 
+    } = req.body;
+
+    // 1. SANITIZACIÓN (Crucial para evitar Error 500)
+    const anioSeguro = (anio_ingreso === '' || anio_ingreso === undefined) ? null : parseInt(anio_ingreso);
+    const valorSeguro = (valor === '' || valor === undefined) ? 0.00 : parseFloat(valor);
+    const procedenciaFinal = procedencia || origen || '';
+
     const query = `
       UPDATE instrumentos 
-      SET nombre=$1, marca=$2, modelo=$3, serie=$4, estado=$5, fecha_adquisicion=$6, origen=$7, ubicacion=$8, imagen_url=$9
-      WHERE id=$10 
+      SET nombre=$1, marca=$2, modelo=$3, serie=$4, estado=$5, fecha_adquisicion=$6, procedencia=$7, ubicacion=$8, imagen_url=$9,
+          codigo_patrimonial=$10, anio_ingreso=$11, valor=$12, tipo=$13, color=$14, dimensiones=$15, otras_caracteristicas=$16, 
+          situacion=$17, observaciones=$18, responsable=$19
+      WHERE id=$20 
       RETURNING *`;
     
-    const values = [nombre, marca, modelo, serie, estado, fecha_adquisicion, origen, ubicacion, imagen_url, id];
+    const values = [
+      nombre, marca, modelo, serie, estado, fecha_adquisicion, procedenciaFinal, ubicacion, imagen_url,
+      codigo_patrimonial, anioSeguro, valorSeguro, tipo, color, dimensiones, otras_caracteristicas, situacion, observaciones, responsable,
+      id
+    ];
     
     const result = await pool.query(query, values);
     
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'Instrumento no encontrado' });
-    }
-
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Instrumento no encontrado' });
     res.status(200).json(result.rows[0]);
 
   } catch (error) {
-    console.error('Error actualizando:', error);
-    res.status(500).json({ error: 'Error al actualizar el instrumento' });
+    console.error('Error detallado actualizando:', error);
+    res.status(500).json({ error: 'Error al actualizar: ' + error.message });
   }
 };

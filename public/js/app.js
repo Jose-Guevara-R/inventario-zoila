@@ -1,66 +1,65 @@
 // public/js/app.js
 
-// --- ⚠️ CONFIGURACIÓN CLOUDINARY ---
-const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/TU_CLOUD_NAME/image/upload';
-const CLOUDINARY_PRESET = 'TU_UPLOAD_PRESET'; 
+// --- CONFIGURACIÓN CLOUDINARY ---
+const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/doqix96et/image/upload';
+const CLOUDINARY_PRESET = 'inventario_preset'; 
 
-// Variable global
 let allInstruments = [];
 
-// --- INICIALIZACIÓN ---
 document.addEventListener('DOMContentLoaded', () => {
     loadInstruments();
-    
-    // Configurar buscador
     const searchInput = document.getElementById('search');
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             const filtered = allInstruments.filter(inst => 
                 inst.nombre.toLowerCase().includes(term) || 
+                (inst.codigo_patrimonial && inst.codigo_patrimonial.toLowerCase().includes(term)) ||
                 (inst.serie && inst.serie.toLowerCase().includes(term))
             );
             renderList(filtered);
         });
     }
-
-    // Configurar Formulario Modal
     const editForm = document.getElementById('edit-form');
-    if (editForm) {
-        editForm.addEventListener('submit', handleEditSubmit);
-    }
+    if (editForm) editForm.addEventListener('submit', handleEditSubmit);
 });
 
-// --- FUNCIÓN LOGOUT (SEGURIDAD) ---
-window.logout = () => {
-    if(confirm('¿Desea cerrar sesión?')) {
-        sessionStorage.removeItem('usuario_autorizado');
-        window.location.href = 'login.html';
-    }
-};
-
-// --- SUBIDA DE IMAGEN ---
+// --- FUNCIÓN DE SUBIDA CON COMPRESIÓN ---
 async function uploadImage(fileInput) {
     const file = fileInput.files[0];
     if (!file) return null;
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', CLOUDINARY_PRESET);
+    // Opciones: Máximo 500KB y ancho max 1200px
+    const options = {
+        maxSizeMB: 0.5,
+        maxWidthOrHeight: 1200,
+        useWebWorker: true
+    };
 
     try {
+        // 1. Comprimir en el navegador
+        // Usamos la librería window.imageCompression cargada en el HTML
+        const compressedFile = await imageCompression(file, options);
+        console.log(`Original: ${file.size / 1024} KB, Comprimido: ${compressedFile.size / 1024} KB`);
+
+        // 2. Subir a Cloudinary
+        const formData = new FormData();
+        formData.append('file', compressedFile);
+        formData.append('upload_preset', CLOUDINARY_PRESET);
+
         const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
         if (!res.ok) throw new Error('Fallo subida a Cloudinary');
+        
         const data = await res.json();
         return data.secure_url;
+
     } catch (error) {
         console.error('Error imagen:', error);
-        alert('Error al subir imagen. Se guardará sin foto nueva.');
+        alert('Error al subir imagen. Verifique conexión.');
         return null;
     }
 }
 
-// --- CARGA DE DATOS ---
 async function loadInstruments() {
     try {
         const res = await fetch('/api/get-instruments');
@@ -70,93 +69,72 @@ async function loadInstruments() {
         renderList(allInstruments);
     } catch (error) {
         console.error(error);
-        const container = document.getElementById('inventory-container');
-        if(container) container.innerHTML = '<p style="text-align:center; color:red;">Error de conexión con el servidor.</p>';
     }
 }
 
-// --- ACTUALIZAR ESTADÍSTICAS ---
 function updateStats() {
     const currentYear = new Date().getFullYear();
     const total = allInstruments.length;
     const nuevos = allInstruments.filter(i => i.fecha_adquisicion && i.fecha_adquisicion.startsWith(String(currentYear))).length;
-    const malos = allInstruments.filter(i => ['MALO', 'BAJA', 'REPARACION'].includes(i.estado)).length;
+    const malos = allInstruments.filter(i => ['MALO', 'BAJA'].includes(i.estado)).length;
 
-    const tEl = document.getElementById('total-count');
-    const nEl = document.getElementById('new-count');
-    const rEl = document.getElementById('repair-count');
-
-    if(tEl) tEl.innerText = total;
-    if(nEl) nEl.innerText = nuevos;
-    if(rEl) rEl.innerText = malos;
+    const t = document.getElementById('total-count');
+    if(t) t.innerText = total;
+    const n = document.getElementById('new-count');
+    if(n) n.innerText = nuevos;
+    const r = document.getElementById('repair-count');
+    if(r) r.innerText = malos;
 }
 
-// --- FILTROS ---
 window.filterData = (criteria) => {
     document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
-    if (event && event.target) event.target.classList.add('active');
-
+    if(event) event.target.classList.add('active');
     const currentYear = new Date().getFullYear();
     let filtered = [];
-
     if (criteria === 'all') filtered = allInstruments;
     else if (criteria === '2025') filtered = allInstruments.filter(i => i.fecha_adquisicion && i.fecha_adquisicion.startsWith(String(currentYear)));
-    else if (criteria === 'reparacion') filtered = allInstruments.filter(i => ['MALO', 'BAJA', 'REPARACION'].includes(i.estado));
-    
+    else if (criteria === 'reparacion') filtered = allInstruments.filter(i => ['MALO', 'BAJA'].includes(i.estado));
     renderList(filtered);
 };
 
-// --- RENDERIZADO ---
 function renderList(list) {
     const container = document.getElementById('inventory-container');
     container.innerHTML = '';
-    
     if (!list || list.length === 0) {
-        container.innerHTML = '<p style="text-align:center; padding:2rem; color:#666">No se encontraron instrumentos.</p>';
+        container.innerHTML = '<p style="text-align:center; padding:2rem;">Sin resultados.</p>';
         return;
     }
-
     const currentYear = new Date().getFullYear();
 
     list.forEach(inst => {
         const isNew = inst.fecha_adquisicion && inst.fecha_adquisicion.startsWith(String(currentYear));
         const badge = isNew ? `<span class="badge-new">NUEVO ${currentYear}</span>` : '';
-        
-        // Imagen por defecto (SVG Base64)
         const noImage = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='14' fill='%2394a3b8' dy='.3em' text-anchor='middle'%3ESin Foto%3C/text%3E%3C/svg%3E";
         const imgUrl = (inst.imagen_url && inst.imagen_url.length > 10) ? inst.imagen_url : noImage;
-        
-        // Fecha bonita
-        let fechaDisplay = '-';
-        if (inst.fecha_registro) {
-            fechaDisplay = new Date(inst.fecha_registro).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
-        }
 
-        // Estado color
-        let borderClass = '';
-        if (inst.estado === 'NUEVO') borderClass = 'estado-nuevo';
-        if (inst.estado === 'MALO' || inst.estado === 'BAJA') borderClass = 'estado-malo';
+        // VISTA LIMPIA (SOLO LO IMPORTANTE)
+        const codigo = inst.codigo_patrimonial ? `<span style="background:#e2e8f0; padding:2px 6px; border-radius:4px; font-size:0.8rem; font-family:monospace;">${inst.codigo_patrimonial}</span>` : '';
 
         const card = `
-            <div class="instrument-card ${borderClass}">
+            <div class="instrument-card" style="border-left: 5px solid ${inst.estado === 'NUEVO' ? '#10b981' : (inst.estado === 'MALO' ? '#ef4444' : '#2563eb')}">
                 ${badge}
-                <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                    <img src="${imgUrl}" alt="${inst.nombre}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; background: #f8fafc;">
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <img src="${imgUrl}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 6px; background: #eee;">
                     <div style="flex: 1;">
-                        <h3 style="margin-bottom:0.2rem; font-size: 1.1rem; color: var(--secondary);">${inst.nombre}</h3>
-                        <p style="font-size: 0.9rem; color: #475569;">
-                            <strong>Marca:</strong> ${inst.marca || '-'} | <strong>Serie:</strong> ${inst.serie || 'S/N'}
+                        <div style="display:flex; justify-content:space-between;">
+                            <h3 style="margin:0; font-size:1.1rem; color:#1e293b;">${inst.nombre}</h3>
+                            ${codigo}
+                        </div>
+                        <p style="margin:4px 0; font-size:0.9rem; color:#64748b;">
+                            ${inst.marca || 'S/M'} ${inst.serie ? '| SN:'+inst.serie : ''}
                         </p>
-                        <p style="font-size: 0.9rem; margin-top: 0.2rem;">
-                            <strong>Estado:</strong> <span style="font-weight:bold">${inst.estado}</span>
-                        </p>
-                        <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.5rem;">
-                            📍 ${inst.ubicacion || 'Almacén'} | 📅 Reg: ${fechaDisplay}
+                        <p style="margin:0; font-size:0.85rem;">
+                            <strong>Estado:</strong> ${inst.estado} | <strong>Ubic:</strong> ${inst.ubicacion || '-'}
                         </p>
                     </div>
                 </div>
-                <div class="actions" style="margin-top: 1rem; padding-top: 0.5rem; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end;">
-                    <button class="btn-edit" onclick="openEditModal(${inst.id})">✏️ Editar / Detalles</button>
+                <div style="margin-top: 10px; text-align: right;">
+                    <button class="btn-edit" onclick="openEditModal(${inst.id})">📋 Ver Detalles / Editar</button>
                 </div>
             </div>
         `;
@@ -164,82 +142,88 @@ function renderList(list) {
     });
 }
 
-// --- GENERAR PDF ---
+// --- GENERADOR DE PDF OFICIAL MINEDU (HORIZONTAL) ---
 window.exportPDF = () => {
-    if(!window.jspdf) { alert("Librería PDF cargando, intente en un momento."); return; }
-    
+    if(!window.jspdf) return alert("Cargando librerías...");
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    
+    // 'l' = Landscape (Horizontal)
+    const doc = new jsPDF('l', 'mm', 'a4');
 
-    // Encabezado
-    doc.setFontSize(18);
-    doc.setTextColor(30, 41, 59);
-    doc.text("Colegio Zoila Hora de Robles", 14, 20);
-    doc.setFontSize(12);
-    doc.setTextColor(100);
-    doc.text("Reporte de Inventario - Banda de Música", 14, 28);
+    doc.setFontSize(14);
+    doc.text("INVENTARIO FÍSICO DE BIENES PATRIMONIALES - 2025", 14, 15);
     doc.setFontSize(10);
-    doc.text(`Generado el: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 14, 34);
+    doc.text("I.E. ZOILA HORA DE ROBLES - CHEPÉN", 14, 22);
 
-    // Tabla
-    const data = allInstruments.map((inst, index) => [
-        index + 1,
-        inst.nombre,
-        inst.marca || '',
-        inst.serie || '',
-        inst.estado,
-        inst.ubicacion || 'Almacén',
-        inst.fecha_adquisicion ? inst.fecha_adquisicion.split('T')[0] : ''
+    const headers = [['N°', 'CÓD. PATRIMONIAL', 'DENOMINACIÓN', 'MARCA', 'MODELO', 'SERIE', 'COLOR', 'ESTADO', 'SITUACIÓN', 'OBSERVACIONES']];
+    
+    const body = allInstruments.map((i, idx) => [
+        idx + 1,
+        i.codigo_patrimonial || '-',
+        i.nombre,
+        i.marca || '-',
+        i.modelo || '-',
+        i.serie || '-',
+        i.color || '-',
+        i.estado,
+        i.situacion || 'Uso',
+        i.observaciones || ''
     ]);
 
     doc.autoTable({
-        startY: 40,
-        head: [['#', 'Instrumento', 'Marca', 'Serie', 'Estado', 'Ubicación', 'Adquisición']],
-        body: data,
+        startY: 28,
+        head: headers,
+        body: body,
         theme: 'grid',
-        headStyles: { fillColor: [30, 41, 59] },
-        styles: { fontSize: 8 },
-        alternateRowStyles: { fillColor: [241, 245, 249] }
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [22, 163, 74], textColor: 255 }, // Verde institucional
+        columnStyles: {
+            0: { cellWidth: 10 }, // Num
+            1: { cellWidth: 35 }, // Codigo
+            2: { cellWidth: 40 }, // Nombre
+            9: { cellWidth: 40 }  // Observaciones mas ancha
+        }
     });
 
-    doc.save('Inventario_Zoila_Hora.pdf');
+    doc.save('Inventario_Patrimonial_ZoilaHora_2025.pdf');
 };
 
-// --- MODAL DE EDICIÓN ---
+// --- MODAL DE DETALLES Y EDICIÓN ---
 window.openEditModal = (id) => {
     const inst = allInstruments.find(i => i.id === id);
     if (!inst) return;
+    
+    // Rellenar TODOS los campos
+    const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val || ''; };
 
-    document.getElementById('edit-id').value = inst.id;
-    document.getElementById('edit-nombre').value = inst.nombre;
-    document.getElementById('edit-estado').value = inst.estado;
-    document.getElementById('edit-ubicacion').value = inst.ubicacion || 'ALMACEN';
-    
-    document.getElementById('edit-marca').value = inst.marca || '';
-    document.getElementById('edit-modelo').value = inst.modelo || '';
-    document.getElementById('edit-serie').value = inst.serie || '';
-    if(inst.fecha_adquisicion) document.getElementById('edit-fecha').value = inst.fecha_adquisicion.split('T')[0];
-    document.getElementById('edit-origen').value = inst.origen || '';
-    
-    document.getElementById('current-image-url').value = inst.imagen_url || '';
-    
+    setVal('edit-id', inst.id);
+    setVal('edit-codigo', inst.codigo_patrimonial);
+    setVal('edit-nombre', inst.nombre);
+    setVal('edit-marca', inst.marca);
+    setVal('edit-modelo', inst.modelo);
+    setVal('edit-serie', inst.serie);
+    setVal('edit-tipo', inst.tipo);
+    setVal('edit-color', inst.color);
+    setVal('edit-dimensiones', inst.dimensiones);
+    setVal('edit-otras', inst.otras_caracteristicas);
+    setVal('edit-anio', inst.anio_ingreso);
+    setVal('edit-valor', inst.valor);
+    setVal('edit-origen', inst.procedencia);
+    setVal('edit-situacion', inst.situacion);
+    setVal('edit-estado', inst.estado);
+    setVal('edit-ubicacion', inst.ubicacion);
+    setVal('edit-responsable', inst.responsable);
+    setVal('edit-obs', inst.observaciones);
+    setVal('current-image-url', inst.imagen_url);
+
+    // Preview Imagen
     const preview = document.getElementById('edit-preview');
-    if (preview) {
-        const noImage = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='10' fill='%2394a3b8' dy='.3em' text-anchor='middle'%3ESin Foto%3C/text%3E%3C/svg%3E";
-        preview.src = (inst.imagen_url && inst.imagen_url.length > 10) ? inst.imagen_url : noImage;
-    }
-    document.getElementById('edit-foto').value = "";
+    if(preview) preview.src = (inst.imagen_url && inst.imagen_url.length > 10) ? inst.imagen_url : '';
+    
     document.getElementById('editModal').style.display = 'block';
 };
 
-window.closeModal = () => {
-    document.getElementById('editModal').style.display = 'none';
-};
-
-window.onclick = (event) => {
-    const modal = document.getElementById('editModal');
-    if (event.target == modal) modal.style.display = 'none';
-};
+window.closeModal = () => document.getElementById('editModal').style.display = 'none';
 
 async function handleEditSubmit(e) {
     e.preventDefault();
@@ -251,9 +235,7 @@ async function handleEditSubmit(e) {
     try {
         const fileInput = document.getElementById('edit-foto');
         let finalImageUrl = document.getElementById('current-image-url').value;
-
         if (fileInput.files.length > 0) {
-            btn.innerText = "Subiendo imagen...";
             const uploadedUrl = await uploadImage(fileInput);
             if (uploadedUrl) finalImageUrl = uploadedUrl;
         }
@@ -275,11 +257,6 @@ async function handleEditSubmit(e) {
         } else {
             alert('Error al actualizar');
         }
-    } catch (error) {
-        console.error(error);
-        alert('Error de conexión');
-    } finally {
-        btn.disabled = false;
-        btn.innerText = txt;
-    }
+    } catch (err) { console.error(err); alert('Error'); }
+    finally { btn.disabled = false; btn.innerText = txt; }
 }

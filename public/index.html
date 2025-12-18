@@ -74,54 +74,85 @@
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">&times;</span>
             <h2 style="margin-bottom: 1rem; color: var(--secondary);">Editar Instrumento</h2>
-            <form id="edit-form">
-                <input type="hidden" id="edit-id" name="id">
-                
-                <div class="form-group">
-                    <label>Nombre</label>
-                    <input type="text" id="edit-nombre" name="nombre" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Estado</label>
-                    <select id="edit-estado" name="estado" required>
-                        <option value="NUEVO">Nuevo</option>
-                        <option value="BUENO">Bueno</option>
-                        <option value="REGULAR">Regular</option>
-                        <option value="MALO">Malo</option>
-                        <option value="BAJA">De Baja</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Ubicación</label>
-                    <select id="edit-ubicacion" name="ubicacion">
-                        <option value="ALMACEN">Almacén</option>
-                        <option value="PRESTADO">Prestado</option>
-                        <option value="REPARACION">Reparación</option>
-                    </select>
-                </div>
-                
-                <!-- Foto -->
-                <div class="form-group" style="background: #f8fafc; padding: 10px; margin-top:10px; border: 1px dashed #cbd5e1; border-radius: 6px;">
-                    <label>Actualizar Foto (Opcional)</label>
-                    <input type="file" id="edit-foto" accept="image/*">
-                    <input type="hidden" id="current-image-url">
-                    <div style="display:flex; align-items:center; gap:10px; margin-top:5px;">
-                        <small>Actual:</small>
-                        <img id="edit-preview" src="" style="width:40px; height:40px; object-fit:cover; border-radius:4px; background:#ddd;">
-                    </div>
-                </div>
+            
+	<form id="edit-form">
+    <!-- ID oculto para identificar cuál editar -->
+    <input type="hidden" id="edit-id" name="id">
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <!-- COLUMNA IZQUIERDA -->
+        <div>
+            <label style="font-weight:bold; font-size:0.9rem;">Código Patrimonial</label>
+            <input type="text" id="edit-codigo" name="codigo_patrimonial" style="width:100%; margin-bottom:8px; padding:6px;">
+            
+            <label style="font-weight:bold; font-size:0.9rem;">Nombre *</label>
+            <input type="text" id="edit-nombre" name="nombre" required style="width:100%; margin-bottom:8px; padding:6px;">
+            
+            <label style="font-weight:bold; font-size:0.9rem;">Marca</label>
+            <input type="text" id="edit-marca" name="marca" style="width:100%; margin-bottom:8px; padding:6px;">
+            
+            <label style="font-weight:bold; font-size:0.9rem;">Modelo</label>
+            <input type="text" id="edit-modelo" name="modelo" style="width:100%; margin-bottom:8px; padding:6px;">
 
-                <!-- Hiddens -->
-                <input type="hidden" id="edit-marca" name="marca">
-                <input type="hidden" id="edit-modelo" name="modelo">
-                <input type="hidden" id="edit-serie" name="serie">
-                <input type="hidden" id="edit-fecha" name="fecha_adquisicion">
-                <input type="hidden" id="edit-origen" name="origen">
+            <label style="font-weight:bold; font-size:0.9rem;">Serie</label>
+            <input type="text" id="edit-serie" name="serie" style="width:100%; margin-bottom:8px; padding:6px;">
 
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top:1rem;">Guardar Cambios</button>
-            </form>
+            <label style="font-weight:bold; font-size:0.9rem;">Estado Conservación</label>
+            <select id="edit-estado" name="estado" style="width:100%; margin-bottom:8px; padding:6px;">
+                <option value="NUEVO">Nuevo</option>
+                <option value="BUENO">Bueno</option>
+                <option value="REGULAR">Regular</option>
+                <option value="MALO">Malo</option>
+                <option value="BAJA">Baja</option>
+            </select>
+            
+            <!-- NUEVO CAMPO AGREGADO -->
+            <label style="font-weight:bold; font-size:0.9rem; color:var(--primary);">Procedencia</label>
+            <input type="text" id="edit-origen" name="procedencia" placeholder="Ej: Donac. APAFA" style="width:100%; margin-bottom:8px; padding:6px; border:1px solid var(--primary);">
+        </div>
+
+        <!-- COLUMNA DERECHA -->
+        <div>
+            <label style="font-weight:bold; font-size:0.9rem;">Situación</label>
+            <select id="edit-situacion" name="situacion" style="width:100%; margin-bottom:8px; padding:6px;">
+                <option value="Uso">En Uso</option>
+                <option value="Desuso">En Desuso</option>
+            </select>
+
+            <label style="font-weight:bold; font-size:0.9rem;">Ubicación</label>
+            <input type="text" id="edit-ubicacion" name="ubicacion" style="width:100%; margin-bottom:8px; padding:6px;">
+            
+            <label style="font-weight:bold; font-size:0.9rem;">Responsable</label>
+            <input type="text" id="edit-responsable" name="responsable" style="width:100%; margin-bottom:8px; padding:6px;">
+
+            <label style="font-weight:bold; font-size:0.9rem;">Año Ingreso</label>
+            <input type="number" id="edit-anio" name="anio_ingreso" style="width:100%; margin-bottom:8px; padding:6px;">
+
+            <label style="font-weight:bold; font-size:0.9rem;">Observaciones</label>
+            <textarea id="edit-obs" name="observaciones" rows="3" style="width:100%; margin-bottom:8px; padding:6px;"></textarea>
+
+            <!-- Foto -->
+            <div style="background:#f1f5f9; padding:10px; border-radius:6px; border:1px dashed #cbd5e1;">
+                <label style="font-size:0.8rem; font-weight:bold;">Cambiar Foto</label>
+                <input type="file" id="edit-foto" style="font-size:0.8rem; width:100%;">
+                <input type="hidden" id="current-image-url">
+                <div style="margin-top:5px; text-align:center;">
+                    <img id="edit-preview" src="" style="width:60px; height:60px; object-fit:cover; border-radius:4px; border:1px solid #ccc;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campos ocultos extra -->
+    <input type="hidden" id="edit-tipo" name="tipo">
+    <input type="hidden" id="edit-color" name="color">
+    <input type="hidden" id="edit-dimensiones" name="dimensiones">
+    <input type="hidden" id="edit-otras" name="otras_caracteristicas">
+    <input type="hidden" id="edit-valor" name="valor">
+    <input type="hidden" name="fecha_adquisicion" value="2025-01-01">
+
+    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px; padding:12px; font-weight:bold;">💾 Guardar Cambios</button>
+</form>
         </div>
     </div>
 
