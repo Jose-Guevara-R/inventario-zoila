@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Instrumento</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Registrar Nuevo Instrumento</h1>
+        <a href="index.html" style="color: white; text-decoration: underline;">Volver al Inventario</a>
+    </header>
+
+    <div class="form-container">
+        <form id="registro-form">
+            <div class="form-group">
+                <label>Nombre del Instrumento *</label>
+                <input type="text" name="nombre" placeholder="Ej: Trompeta Si Bemol" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Marca</label>
+                <input type="text" name="marca" placeholder="Ej: Yamaha">
+            </div>
+
+            <div class="form-group">
+                <label>Número de Serie (Importante)</label>
+                <input type="text" name="serie" placeholder="S/N 123456">
+            </div>
+
+            <div class="form-group">
+                <label>Estado Actual *</label>
+                <select name="estado" required>
+                    <option value="NUEVO">Nuevo</option>
+                    <option value="BUENO">Bueno (Usado)</option>
+                    <option value="REGULAR">Regular</option>
+                    <option value="MALO">Malo (Requiere Reparación)</option>
+                    <option value="BAJA">De Baja (Inservible)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Fecha de Adquisición *</label>
+                <input type="date" name="fecha_adquisicion" required>
+            </div>
+
+            <div class="form-group">
+                <label>Origen</label>
+                <select name="origen">
+                    <option value="COMPRA">Compra Colegio/APAFA</option>
+                    <option value="DONACION">Donación</option>
+                    <option value="MINISTERIO">Ministerio de Educación</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%">Guardar Instrumento</button>
+        </form>
+    </div>
+
+    <script>
+        // Lógica simple para enviar el formulario
+        document.getElementById('registro-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/api/add-instrument', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    alert('¡Instrumento registrado con éxito!');
+                    window.location.href = 'index.html';
+                } else {
+                    alert('Error al registrar');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Error de conexión');
+            }
+        });
+    </script>
+</body>
+</html>

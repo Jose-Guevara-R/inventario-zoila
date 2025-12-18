@@ -1,0 +1,71 @@
+:root {
+    --primary: #2563eb; /* Azul Institucional */
+    --secondary: #1e293b; /* Gris Oscuro */
+    --accent: #f59e0b; /* Dorado/Ambar (Banda) */
+    --bg: #f1f5f9;
+    --text: #334155;
+    --success: #10b981;
+    --danger: #ef4444;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+body { background-color: var(--bg); color: var(--text); padding-bottom: 80px; }
+
+/* Header */
+header { background: var(--secondary); color: white; padding: 1rem; text-align: center; }
+header h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+
+/* Dashboard Cards (Totales) */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+}
+.stat-card {
+    background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;
+}
+.stat-card h3 { font-size: 2rem; color: var(--primary); }
+.stat-card p { font-size: 0.9rem; color: #64748b; }
+
+/* Controles y Filtros */
+.controls { padding: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: space-between; }
+.search-bar { flex-grow: 1; padding: 0.8rem; border: 1px solid #ccc; border-radius: 6px; }
+.btn { padding: 0.8rem 1.2rem; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; text-decoration: none; display: inline-block; }
+.btn-primary { background: var(--primary); }
+.btn-filter { background: white; color: var(--text); border: 1px solid #ccc; }
+.btn-filter.active { background: var(--secondary); color: white; border-color: var(--secondary); }
+
+/* Listado de Instrumentos */
+.inventory-list { padding: 1rem; }
+
+/* Vista Móvil (Cards) */
+.instrument-card {
+    background: white; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid var(--primary);
+    position: relative;
+}
+.instrument-card.estado-malo { border-left-color: var(--danger); }
+.instrument-card.estado-nuevo { border-left-color: var(--success); }
+
+.badge-new { 
+    background: var(--accent); color: white; padding: 2px 8px; border-radius: 12px; 
+    font-size: 0.7rem; position: absolute; top: 1rem; right: 1rem; 
+}
+
+/* Vista Escritorio (Tabla) - Se activa en pantallas grandes */
+@media (min-width: 768px) {
+    .inventory-list { display: block; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: var(--secondary); color: white; }
+    
+    /* Ocultar vista de cards en PC si prefieres solo tabla, o adaptar CSS */
+}
+
+/* Formularios */
+.form-container { max-width: 600px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 8px; }
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+.form-group input, .form-group select { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; }
