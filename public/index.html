@@ -5,97 +5,126 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventario Banda Zoila Hora de Robles</title>
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- 1. SCRIPT DE SEGURIDAD (Si no está logueado, lo bota) -->
+    <script>
+        if (!sessionStorage.getItem('usuario_autorizado')) {
+            window.location.href = 'login.html';
+        }
+    </script>
+
+    <!-- 2. LIBRERÍAS PARA PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
-    <header>
+    <header style="position: relative;">
         <h1>🎺 Banda Zoila Hora de Robles</h1>
         <p>Sistema de Gestión de Inventario 2025</p>
+        
+        <!-- Botón Salir -->
+        <button onclick="logout()" style="position: absolute; top: 1rem; right: 1rem; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 12px; cursor: pointer; border-radius: 4px; font-size: 0.8rem;">
+            Cerrar Sesión 🔒
+        </button>
     </header>
 
-    <!-- Dashboard Rápido -->
+    <!-- DASHBOARD -->
     <section class="stats-container">
         <div class="stat-card">
             <h3 id="total-count">0</h3>
             <p>Total Instrumentos</p>
         </div>
         <div class="stat-card">
-            <h3 id="new-count">0</h3>
+            <h3 id="new-count" style="color: var(--primary)">0</h3>
             <p>Adquiridos 2025</p>
         </div>
         <div class="stat-card">
             <h3 id="repair-count" style="color: var(--danger)">0</h3>
-            <p>En Reparación/Malos</p>
+            <p>En Reparación/Baja</p>
         </div>
     </section>
 
-    <!-- Controles -->
+    <!-- CONTROLES -->
     <section class="controls">
-        <input type="text" id="search" class="search-bar" placeholder="Buscar instrumento (Ej: Saxofón)...">
-        <a href="registro.html" class="btn btn-primary">+ Nuevo</a>
+        <input type="text" id="search" class="search-bar" placeholder="🔍 Buscar por nombre o serie...">
+        <a href="registro.html" class="btn btn-primary">+ Registrar Nuevo</a>
     </section>
 
-    <section class="controls">
-        <button class="btn btn-filter active" onclick="filterData('all')">Todos</button>
-        <button class="btn btn-filter" onclick="filterData('2025')">Nuevos (2025)</button>
-        <button class="btn btn-filter" onclick="filterData('reparacion')">Reparación/Baja</button>
+    <!-- FILTROS Y PDF -->
+    <section class="controls" style="align-items: center;">
+        <div style="display: flex; gap: 5px;">
+            <button class="btn btn-filter active" onclick="filterData('all')">Todos</button>
+            <button class="btn btn-filter" onclick="filterData('2025')">Nuevos (2025)</button>
+            <button class="btn btn-filter" onclick="filterData('reparacion')">Reparación/Baja</button>
+        </div>
+        
+        <!-- Botón PDF -->
+        <button class="btn" onclick="exportPDF()" style="background-color: #475569; color: white; margin-left: auto; font-size: 0.9rem;">
+            📄 Descargar PDF
+        </button>
     </section>
 
-    <!-- Lista de Resultados -->
+    <!-- LISTA -->
     <main class="inventory-list" id="inventory-container">
-        <!-- Aquí JS inyectará los instrumentos -->
-        <p style="text-align:center">Cargando inventario...</p>
+        <p style="text-align:center; padding: 2rem; color: #666;">Cargando inventario...</p>
     </main>
 
-    <!-- ... Resto de tu HTML ... -->
-
-    <!-- Modal de Edición -->
+    <!-- VENTANA MODAL DE EDICIÓN -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">&times;</span>
-            <h2 style="margin-bottom: 1rem;">Editar Instrumento</h2>
-            
+            <h2 style="margin-bottom: 1rem; color: var(--secondary);">Editar Instrumento</h2>
             <form id="edit-form">
-                <!-- ID oculto (necesario para saber cuál actualizar) -->
                 <input type="hidden" id="edit-id" name="id">
-
+                
                 <div class="form-group">
                     <label>Nombre</label>
                     <input type="text" id="edit-nombre" name="nombre" required>
                 </div>
                 
                 <div class="form-group">
-                    <label>Estado Actual</label>
+                    <label>Estado</label>
                     <select id="edit-estado" name="estado" required>
                         <option value="NUEVO">Nuevo</option>
                         <option value="BUENO">Bueno</option>
                         <option value="REGULAR">Regular</option>
-                        <option value="MALO">Malo (Requiere Reparación)</option>
-                        <option value="BAJA">De Baja (Inservible)</option>
+                        <option value="MALO">Malo</option>
+                        <option value="BAJA">De Baja</option>
                     </select>
                 </div>
-
+                
                 <div class="form-group">
                     <label>Ubicación</label>
                     <select id="edit-ubicacion" name="ubicacion">
                         <option value="ALMACEN">Almacén</option>
                         <option value="PRESTADO">Prestado</option>
-                        <option value="REPARACION">En Taller</option>
+                        <option value="REPARACION">Reparación</option>
                     </select>
                 </div>
+                
+                <!-- Foto -->
+                <div class="form-group" style="background: #f8fafc; padding: 10px; margin-top:10px; border: 1px dashed #cbd5e1; border-radius: 6px;">
+                    <label>Actualizar Foto (Opcional)</label>
+                    <input type="file" id="edit-foto" accept="image/*">
+                    <input type="hidden" id="current-image-url">
+                    <div style="display:flex; align-items:center; gap:10px; margin-top:5px;">
+                        <small>Actual:</small>
+                        <img id="edit-preview" src="" style="width:40px; height:40px; object-fit:cover; border-radius:4px; background:#ddd;">
+                    </div>
+                </div>
 
-                <!-- Campos extra ocultos visualmente pero necesarios para no borrarlos -->
+                <!-- Hiddens -->
                 <input type="hidden" id="edit-marca" name="marca">
                 <input type="hidden" id="edit-modelo" name="modelo">
                 <input type="hidden" id="edit-serie" name="serie">
                 <input type="hidden" id="edit-fecha" name="fecha_adquisicion">
                 <input type="hidden" id="edit-origen" name="origen">
 
-                <button type="submit" class="btn btn-primary" style="width: 100%">Guardar Cambios</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top:1rem;">Guardar Cambios</button>
             </form>
         </div>
     </div>
 
-    <!-- Script principal -->
     <script type="module" src="js/app.js"></script>
 </body>
 </html>
