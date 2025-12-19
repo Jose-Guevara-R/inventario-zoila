@@ -11,14 +11,14 @@
     <meta name="theme-color" content="#2563eb">
     <link rel="apple-touch-icon" href="icon-192.png">
 
-    <!-- SCRIPT DE SEGURIDAD -->
+    <!-- SEGURIDAD -->
     <script>
         if (!sessionStorage.getItem('usuario_autorizado')) {
             window.location.href = 'login.html';
         }
     </script>
 
-    <!-- LIBRERÍAS (PDF, EXCEL, COMPRESIÓN) -->
+    <!-- LIBRERÍAS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -26,17 +26,12 @@
 </head>
 <body>
     
-    <!-- HEADER CORREGIDO (Sin estilos inline feos) -->
     <header>
         <div>
             <h1>🎺 Banda Zoila Hora de Robles</h1>
             <p>Sistema de Gestión de Inventario 2025</p>
         </div>
-        
-        <!-- El botón ahora usa la clase CSS 'btn-logout' para ubicarse bien en celular y PC -->
-        <button onclick="logout()" class="btn-logout">
-            Cerrar Sesión 🔒
-        </button>
+        <button onclick="logout()" class="btn-logout">Cerrar Sesión 🔒</button>
     </header>
 
     <!-- DASHBOARD -->
@@ -63,7 +58,7 @@
 
     <!-- EXCEL Y PDF -->
     <section class="controls" style="flex-direction: column; align-items: stretch; gap: 15px;">
-        <!-- Botones Excel -->
+        <!-- Botones Gestión Excel -->
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button onclick="downloadTemplate()" style="background: #0f172a; color: white; padding: 10px; border:none; border-radius:6px; cursor:pointer; font-size:0.85rem; flex: 1;">
                 📥 Descargar Plantilla
@@ -74,16 +69,24 @@
             <input type="file" id="excel-input" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(this)">
         </div>
 
-        <!-- Filtros y PDF -->
+        <!-- Filtros y Exportación -->
         <div style="display: flex; gap: 5px; justify-content: space-between; align-items: center; flex-wrap: wrap;">
             <div style="display: flex; gap: 5px;">
                 <button class="btn btn-filter active" onclick="filterData('all')">Todos</button>
-                <button class="btn btn-filter" onclick="filterData('2025')">Nuevos (2025)</button>
+                <button class="btn btn-filter" onclick="filterData('2025')">Nuevos</button>
                 <button class="btn btn-filter" onclick="filterData('reparacion')">Reparación</button>
             </div>
-            <button class="btn" onclick="exportPDF()" style="background-color: #475569; color: white; padding: 8px 12px; margin-top: 5px;">
-                📄 PDF
-            </button>
+            
+            <div style="display: flex; gap: 5px;">
+                <!-- NUEVO BOTÓN EXCEL -->
+                <button class="btn" onclick="exportExcel()" style="background-color: #059669; color: white; padding: 8px 12px; margin-top: 5px;">
+                    📊 Excel
+                </button>
+                <!-- BOTÓN PDF -->
+                <button class="btn" onclick="exportPDF()" style="background-color: #475569; color: white; padding: 8px 12px; margin-top: 5px;">
+                    📄 PDF
+                </button>
+            </div>
         </div>
     </section>
 
@@ -172,7 +175,6 @@
                 <input type="hidden" id="edit-valor" name="valor">
                 <input type="hidden" name="fecha_adquisicion" value="2025-01-01">
 
-                <!-- Botones Acción -->
                 <div style="margin-top: 20px; display: flex; gap: 10px; padding-top: 15px; border-top: 1px solid #eee;">
                     <button type="button" onclick="handleDelete()" style="background: #ef4444; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">🗑️ Eliminar</button>
                     <button type="submit" class="btn btn-primary" style="flex: 1; padding: 12px; font-weight: bold;">💾 Guardar Cambios</button>
@@ -181,13 +183,12 @@
         </div>
     </div>
 
-    <!-- PWA Service Worker -->
+    <!-- PWA -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js'); });
         }
     </script>
-
     <script type="module" src="js/app.js"></script>
 </body>
 </html>
