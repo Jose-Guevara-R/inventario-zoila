@@ -166,24 +166,62 @@ function renderList(list) {
 }
 
 // --- PDF ---
+// --- GENERADOR PDF (HORIZONTAL / LANDSCAPE) ---
 window.exportPDF = () => {
-    if(!window.jspdf) return alert("Cargando librerías...");
+    if(!window.jspdf) {
+        alert("Cargando librería PDF, espere unos segundos e intente de nuevo.");
+        return;
+    }
     const { jsPDF } = window.jspdf;
+    
+    // 'l' = Landscape (Horizontal), 'mm' = milímetros, 'a4' = tamaño hoja
     const doc = new jsPDF('l', 'mm', 'a4');
 
-    doc.setFontSize(14); doc.text("INVENTARIO FÍSICO DE BIENES PATRIMONIALES - 2025", 14, 15);
-    doc.setFontSize(10); doc.text("I.E. ZOILA HORA DE ROBLES", 14, 22); doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 250, 22);
+    // Títulos
+    doc.setFontSize(14);
+    doc.text("INVENTARIO FÍSICO DE BIENES PATRIMONIALES - 2025", 14, 15);
+    doc.setFontSize(10);
+    doc.text("I.E. ZOILA HORA DE ROBLES - CHEPÉN", 14, 22);
+    doc.text(`Fecha de Reporte: ${new Date().toLocaleDateString()}`, 250, 22);
 
-    const headers = [['N°', 'CÓDIGO', 'DENOMINACIÓN', 'MARCA', 'MODELO', 'SERIE', 'COLOR', 'ESTADO', 'SITUACIÓN', 'OBS.']];
+    // Definir columnas (Agregamos PROCEDENCIA)
+    const headers = [['N°', 'CÓDIGO', 'DENOMINACIÓN', 'MARCA', 'MODELO', 'SERIE', 'COLOR', 'ESTADO', 'SITUACIÓN', 'PROCEDENCIA', 'OBS.']];
+    
+    // Mapear datos
     const body = allInstruments.map((i, idx) => [
-        idx + 1, i.codigo_patrimonial||'-', i.nombre, i.marca||'-', i.modelo||'-', i.serie||'-', i.color||'-', i.estado, i.situacion||'Uso', i.observaciones||''
+        idx + 1,
+        i.codigo_patrimonial || '-',
+        i.nombre,
+        i.marca || '-',
+        i.modelo || '-',
+        i.serie || '-',
+        i.color || '-',
+        i.estado,
+        i.situacion || 'Uso',
+        i.procedencia || i.origen || '-', // <--- AQUÍ ESTÁ EL DATO NUEVO
+        i.observaciones || ''
     ]);
 
+    // Generar tabla
     doc.autoTable({
-        startY: 28, head: headers, body: body, theme: 'grid', styles: { fontSize: 8, cellPadding: 2 },
-        headStyles: { fillColor: [22, 163, 74], halign: 'center' }, columnStyles: { 0: {halign:'center'}, 2: {cellWidth:45} }
+        startY: 28,
+        head: headers,
+        body: body,
+        theme: 'grid',
+        styles: { fontSize: 7, cellPadding: 2, valign: 'middle' }, // Bajé un poco la fuente a 7 para que quepa todo
+        headStyles: { fillColor: [22, 163, 74], textColor: 255, halign: 'center' }, // Verde Cabecera
+        columnStyles: {
+            0: { cellWidth: 8, halign: 'center' },  // N°
+            1: { cellWidth: 30 }, // Codigo
+            2: { cellWidth: 40 }, // Denominación
+            7: { cellWidth: 15, halign: 'center' }, // Estado
+            8: { cellWidth: 15, halign: 'center' }, // Situación
+            9: { cellWidth: 25 }, // Procedencia (Nuevo ancho)
+            10: { cellWidth: 25 } // Observaciones
+        }
     });
-    doc.save('Inventario_ZoilaHora.pdf');
+
+    doc.save('Inventario_Patrimonial_ZoilaHora_2025.pdf');
 };
 
 // --- MODAL ---
