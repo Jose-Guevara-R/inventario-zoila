@@ -50,6 +50,18 @@
         <a href="registro.html" class="btn btn-primary">+ Registrar Nuevo</a>
     </section>
 
+<!-- SECCIÓN IMPORTACIÓN EXCEL -->
+<div style="width: 100%; display: flex; gap: 10px; margin-top: 10px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+    <button onclick="downloadTemplate()" style="background: #0f172a; color: white; padding: 8px 12px; border:none; border-radius:4px; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; gap:5px;">
+        📥 Descargar Plantilla Excel
+    </button>
+    
+    <label for="excel-input" style="background: #16a34a; color: white; padding: 8px 12px; border:none; border-radius:4px; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; gap:5px;">
+        📤 Subir Excel con Datos
+    </label>
+    <input type="file" id="excel-input" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(this)">
+</div>
+
     <!-- FILTROS Y PDF -->
     <section class="controls" style="align-items: center;">
         <div style="display: flex; gap: 5px;">
@@ -156,6 +168,10 @@
         </div>
     </div>
 
+<!-- Librería para leer Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
     <script type="module" src="js/app.js"></script>
 </body>
 </html>
