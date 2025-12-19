@@ -1,129 +1,144 @@
 :root {
-    --primary: #2563eb; /* Azul Institucional */
-    --secondary: #1e293b; /* Gris Oscuro */
-    --accent: #f59e0b; /* Dorado/Ambar (Banda) */
-    --bg: #f1f5f9;
-    --text: #334155;
-    --success: #10b981;
-    --danger: #ef4444;
+    --primary: #2563eb;    /* Azul Institucional */
+    --secondary: #1e293b;  /* Gris Oscuro (Fondo Header) */
+    --accent: #f59e0b;     /* Dorado (Detalles) */
+    --bg: #f1f5f9;         /* Fondo Web */
+    --text: #334155;       /* Texto General */
+    --success: #10b981;    /* Verde */
+    --danger: #ef4444;     /* Rojo */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
 
 body { background-color: var(--bg); color: var(--text); padding-bottom: 80px; }
 
-/* Header */
-header { background: var(--secondary); color: white; padding: 1rem; text-align: center; }
-header h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+/* --- HEADER RESPONSIVO --- */
+header { 
+    background: var(--secondary); 
+    color: white; 
+    padding: 1.5rem 1rem; 
+    text-align: center;
+    /* En móvil: Flexbox columna para apilar título y botón */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+}
 
-/* Dashboard Cards (Totales) */
+header h1 { font-size: 1.5rem; margin: 0; line-height: 1.2; }
+header p { font-size: 0.9rem; opacity: 0.9; margin: 0; }
+
+/* Botón de Salir (Estilo base móvil) */
+.btn-logout {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 20px; /* Bordes redondeados */
+    font-size: 0.85rem;
+    margin-top: 10px; /* Separación del título en móvil */
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.btn-logout:hover { background: rgba(255,255,255,0.3); }
+
+/* --- REGLAS PARA PC (Pantallas grandes) --- */
+@media (min-width: 768px) {
+    header {
+        display: block; /* Volvemos a bloque normal */
+        padding: 1rem;
+    }
+    .btn-logout {
+        position: absolute; /* Lo mandamos a la esquina */
+        top: 1.5rem;
+        right: 1.5rem;
+        margin-top: 0;
+    }
+}
+
+/* --- DASHBOARD CARDS --- */
 .stats-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 1rem;
     padding: 1rem;
 }
 .stat-card {
-    background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;
+    background: white; padding: 1rem; border-radius: 12px; 
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); text-align: center;
 }
-.stat-card h3 { font-size: 2rem; color: var(--primary); }
-.stat-card p { font-size: 0.9rem; color: #64748b; }
+.stat-card h3 { font-size: 2rem; color: var(--primary); margin-bottom: 0.2rem; }
+.stat-card p { font-size: 0.85rem; color: #64748b; font-weight: 500; }
 
-/* Controles y Filtros */
-.controls { padding: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: space-between; }
-.search-bar { flex-grow: 1; padding: 0.8rem; border: 1px solid #ccc; border-radius: 6px; }
-.btn { padding: 0.8rem 1.2rem; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; text-decoration: none; display: inline-block; }
+/* --- CONTROLES Y FILTROS --- */
+.controls { 
+    padding: 0 1rem 1rem 1rem; 
+    display: flex; flex-wrap: wrap; gap: 10px; 
+    justify-content: space-between; 
+}
+.search-bar { 
+    flex-grow: 1; padding: 12px; border: 1px solid #cbd5e1; 
+    border-radius: 8px; font-size: 1rem; outline: none;
+}
+.search-bar:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+.btn { 
+    padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; 
+    font-weight: 600; color: white; text-decoration: none; 
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.95rem;
+}
 .btn-primary { background: var(--primary); }
-.btn-filter { background: white; color: var(--text); border: 1px solid #ccc; }
-.btn-filter.active { background: var(--secondary); color: white; border-color: var(--secondary); }
+.btn-primary:hover { background: #1d4ed8; }
 
-/* Listado de Instrumentos */
-.inventory-list { padding: 1rem; }
+.btn-filter { 
+    background: white; color: var(--text); border: 1px solid #cbd5e1; 
+    padding: 8px 12px; font-size: 0.9rem; border-radius: 6px;
+}
+.btn-filter.active { 
+    background: var(--secondary); color: white; border-color: var(--secondary); 
+}
 
-/* Vista Móvil (Cards) */
+/* --- LISTADO (CARDS) --- */
+.inventory-list { padding: 0 1rem 1rem 1rem; }
 .instrument-card {
-    background: white; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid var(--primary);
-    position: relative;
+    background: white; border-radius: 10px; padding: 1rem; margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative;
+    border: 1px solid #e2e8f0;
 }
-.instrument-card.estado-malo { border-left-color: var(--danger); }
-.instrument-card.estado-nuevo { border-left-color: var(--success); }
-
 .badge-new { 
-    background: var(--accent); color: white; padding: 2px 8px; border-radius: 12px; 
-    font-size: 0.7rem; position: absolute; top: 1rem; right: 1rem; 
-}
-
-/* Vista Escritorio (Tabla) - Se activa en pantallas grandes */
-@media (min-width: 768px) {
-    .inventory-list { display: block; overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; background: white; }
-    th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
-    th { background: var(--secondary); color: white; }
-    
-    /* Ocultar vista de cards en PC si prefieres solo tabla, o adaptar CSS */
-}
-
-/* Formularios */
-.form-container { max-width: 600px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 8px; }
-.form-group { margin-bottom: 1rem; }
-.form-group label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
-.form-group input, .form-group select { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; }
-
-/* ... (Todo tu CSS anterior) ... */
-
-/* Estilos de la Ventana Modal (Edición) */
-.modal {
-    display: none; /* Oculto por defecto */
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.5); /* Fondo oscuro transparente */
-    backdrop-filter: blur(4px);
-}
-
-.modal-content {
-    background-color: #fff;
-    margin: 10% auto;
-    padding: 2rem;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 500px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    position: relative;
-    animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-    from { transform: translateY(-50px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-.close-btn {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: #666;
-}
-
-.actions {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
+    background: var(--accent); color: white; padding: 4px 10px; border-radius: 20px; 
+    font-size: 0.7rem; font-weight: bold; position: absolute; top: 10px; right: 10px; 
 }
 
 .btn-edit {
-    background: var(--secondary);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    font-size: 0.8rem;
+    background: var(--secondary); color: white; padding: 6px 12px;
+    border-radius: 6px; border: none; cursor: pointer; font-size: 0.85rem;
+}
+
+/* --- MODAL --- */
+.modal {
+    display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+    width: 100%; height: 100%; overflow: auto;
+    background-color: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+}
+.modal-content {
+    background-color: #fff; margin: 5% auto; padding: 1.5rem;
+    border-radius: 12px; width: 95%; max-width: 600px;
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); position: relative;
+    animation: slideUp 0.3s ease-out;
+}
+@keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.close-btn { position: absolute; top: 15px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #94a3b8; }
+
+/* Formularios */
+.form-container { max-width: 800px; margin: 2rem auto; background: white; padding: 1.5rem; border-radius: 12px; }
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.9rem; color: var(--secondary); }
+.form-group input, .form-group select, .form-group textarea { 
+    width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; 
 }

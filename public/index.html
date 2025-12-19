@@ -1,36 +1,40 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
     <meta charset="UTF-8">
-
-<!-- PWA Manifest y Color del Tema -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2563eb">
-<link rel="apple-touch-icon" href="icon-192.png"> <!-- Para iPhone -->
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventario Banda Zoila Hora de Robles</title>
     <link rel="stylesheet" href="styles.css">
     
-    <!-- 1. SCRIPT DE SEGURIDAD (Si no está logueado, lo bota) -->
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <!-- SCRIPT DE SEGURIDAD -->
     <script>
         if (!sessionStorage.getItem('usuario_autorizado')) {
             window.location.href = 'login.html';
         }
     </script>
 
-    <!-- 2. LIBRERÍAS PARA PDF -->
+    <!-- LIBRERÍAS (PDF, EXCEL, COMPRESIÓN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
 </head>
 <body>
-    <header style="position: relative;">
-        <h1>🎺 Banda Zoila Hora de Robles</h1>
-        <p>Sistema de Gestión de Inventario 2025</p>
+    
+    <!-- HEADER CORREGIDO (Sin estilos inline feos) -->
+    <header>
+        <div>
+            <h1>🎺 Banda Zoila Hora de Robles</h1>
+            <p>Sistema de Gestión de Inventario 2025</p>
+        </div>
         
-        <!-- Botón Salir -->
-        <button onclick="logout()" style="position: absolute; top: 1rem; right: 1rem; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 6px 12px; cursor: pointer; border-radius: 4px; font-size: 0.8rem;">
+        <!-- El botón ahora usa la clase CSS 'btn-logout' para ubicarse bien en celular y PC -->
+        <button onclick="logout()" class="btn-logout">
             Cerrar Sesión 🔒
         </button>
     </header>
@@ -57,30 +61,30 @@
         <a href="registro.html" class="btn btn-primary">+ Registrar Nuevo</a>
     </section>
 
-<!-- SECCIÓN IMPORTACIÓN EXCEL -->
-<div style="width: 100%; display: flex; gap: 10px; margin-top: 10px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
-    <button onclick="downloadTemplate()" style="background: #0f172a; color: white; padding: 8px 12px; border:none; border-radius:4px; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; gap:5px;">
-        📥 Descargar Plantilla Excel
-    </button>
-    
-    <label for="excel-input" style="background: #16a34a; color: white; padding: 8px 12px; border:none; border-radius:4px; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; gap:5px;">
-        📤 Subir Excel con Datos
-    </label>
-    <input type="file" id="excel-input" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(this)">
-</div>
-
-    <!-- FILTROS Y PDF -->
-    <section class="controls" style="align-items: center;">
-        <div style="display: flex; gap: 5px;">
-            <button class="btn btn-filter active" onclick="filterData('all')">Todos</button>
-            <button class="btn btn-filter" onclick="filterData('2025')">Nuevos (2025)</button>
-            <button class="btn btn-filter" onclick="filterData('reparacion')">Reparación/Baja</button>
+    <!-- EXCEL Y PDF -->
+    <section class="controls" style="flex-direction: column; align-items: stretch; gap: 15px;">
+        <!-- Botones Excel -->
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button onclick="downloadTemplate()" style="background: #0f172a; color: white; padding: 10px; border:none; border-radius:6px; cursor:pointer; font-size:0.85rem; flex: 1;">
+                📥 Descargar Plantilla
+            </button>
+            <label for="excel-input" style="background: #16a34a; color: white; padding: 10px; border:none; border-radius:6px; cursor:pointer; font-size:0.85rem; flex: 1; text-align: center;">
+                📤 Subir Excel
+            </label>
+            <input type="file" id="excel-input" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(this)">
         </div>
-        
-        <!-- Botón PDF -->
-        <button class="btn" onclick="exportPDF()" style="background-color: #475569; color: white; margin-left: auto; font-size: 0.9rem;">
-            📄 Descargar PDF
-        </button>
+
+        <!-- Filtros y PDF -->
+        <div style="display: flex; gap: 5px; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <div style="display: flex; gap: 5px;">
+                <button class="btn btn-filter active" onclick="filterData('all')">Todos</button>
+                <button class="btn btn-filter" onclick="filterData('2025')">Nuevos (2025)</button>
+                <button class="btn btn-filter" onclick="filterData('reparacion')">Reparación</button>
+            </div>
+            <button class="btn" onclick="exportPDF()" style="background-color: #475569; color: white; padding: 8px 12px; margin-top: 5px;">
+                📄 PDF
+            </button>
+        </div>
     </section>
 
     <!-- LISTA -->
@@ -88,123 +92,102 @@
         <p style="text-align:center; padding: 2rem; color: #666;">Cargando inventario...</p>
     </main>
 
-    <!-- VENTANA MODAL DE EDICIÓN -->
+    <!-- MODAL DE EDICIÓN -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">&times;</span>
             <h2 style="margin-bottom: 1rem; color: var(--secondary);">Editar Instrumento</h2>
             
-	<form id="edit-form">
-    <!-- ID oculto para identificar cuál editar -->
-    <input type="hidden" id="edit-id" name="id">
-    
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-        <!-- COLUMNA IZQUIERDA -->
-        <div>
-            <label style="font-weight:bold; font-size:0.9rem;">Código Patrimonial</label>
-            <input type="text" id="edit-codigo" name="codigo_patrimonial" style="width:100%; margin-bottom:8px; padding:6px;">
-            
-            <label style="font-weight:bold; font-size:0.9rem;">Nombre *</label>
-            <input type="text" id="edit-nombre" name="nombre" required style="width:100%; margin-bottom:8px; padding:6px;">
-            
-            <label style="font-weight:bold; font-size:0.9rem;">Marca</label>
-            <input type="text" id="edit-marca" name="marca" style="width:100%; margin-bottom:8px; padding:6px;">
-            
-            <label style="font-weight:bold; font-size:0.9rem;">Modelo</label>
-            <input type="text" id="edit-modelo" name="modelo" style="width:100%; margin-bottom:8px; padding:6px;">
+            <form id="edit-form">
+                <input type="hidden" id="edit-id" name="id">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <!-- Columna 1 -->
+                    <div>
+                        <label style="font-weight:bold; font-size:0.9rem;">Código Patrimonial</label>
+                        <input type="text" id="edit-codigo" name="codigo_patrimonial" style="width:100%; margin-bottom:8px;">
+                        
+                        <label style="font-weight:bold; font-size:0.9rem;">Nombre *</label>
+                        <input type="text" id="edit-nombre" name="nombre" required style="width:100%; margin-bottom:8px;">
+                        
+                        <label style="font-weight:bold; font-size:0.9rem;">Marca</label>
+                        <input type="text" id="edit-marca" name="marca" style="width:100%; margin-bottom:8px;">
+                        
+                        <label style="font-weight:bold; font-size:0.9rem;">Modelo</label>
+                        <input type="text" id="edit-modelo" name="modelo" style="width:100%; margin-bottom:8px;">
 
-            <label style="font-weight:bold; font-size:0.9rem;">Serie</label>
-            <input type="text" id="edit-serie" name="serie" style="width:100%; margin-bottom:8px; padding:6px;">
+                        <label style="font-weight:bold; font-size:0.9rem;">Serie</label>
+                        <input type="text" id="edit-serie" name="serie" style="width:100%; margin-bottom:8px;">
 
-            <label style="font-weight:bold; font-size:0.9rem;">Estado Conservación</label>
-            <select id="edit-estado" name="estado" style="width:100%; margin-bottom:8px; padding:6px;">
-                <option value="NUEVO">Nuevo</option>
-                <option value="BUENO">Bueno</option>
-                <option value="REGULAR">Regular</option>
-                <option value="MALO">Malo</option>
-                <option value="BAJA">Baja</option>
-            </select>
-            
-            <!-- NUEVO CAMPO AGREGADO -->
-            <label style="font-weight:bold; font-size:0.9rem; color:var(--primary);">Procedencia</label>
-            <input type="text" id="edit-origen" name="procedencia" placeholder="Ej: Donac. APAFA" style="width:100%; margin-bottom:8px; padding:6px; border:1px solid var(--primary);">
-        </div>
+                        <label style="font-weight:bold; font-size:0.9rem;">Estado</label>
+                        <select id="edit-estado" name="estado" style="width:100%; margin-bottom:8px;">
+                            <option value="NUEVO">Nuevo</option>
+                            <option value="BUENO">Bueno</option>
+                            <option value="REGULAR">Regular</option>
+                            <option value="MALO">Malo</option>
+                            <option value="BAJA">Baja</option>
+                        </select>
 
-        <!-- COLUMNA DERECHA -->
-        <div>
-            <label style="font-weight:bold; font-size:0.9rem;">Situación</label>
-            <select id="edit-situacion" name="situacion" style="width:100%; margin-bottom:8px; padding:6px;">
-                <option value="Uso">En Uso</option>
-                <option value="Desuso">En Desuso</option>
-            </select>
+                        <label style="font-weight:bold; font-size:0.9rem; color:var(--primary);">Procedencia</label>
+                        <input type="text" id="edit-origen" name="procedencia" placeholder="Ej: APAFA" style="width:100%; margin-bottom:8px; border:1px solid var(--primary);">
+                    </div>
 
-            <label style="font-weight:bold; font-size:0.9rem;">Ubicación</label>
-            <input type="text" id="edit-ubicacion" name="ubicacion" style="width:100%; margin-bottom:8px; padding:6px;">
-            
-            <label style="font-weight:bold; font-size:0.9rem;">Responsable</label>
-            <input type="text" id="edit-responsable" name="responsable" style="width:100%; margin-bottom:8px; padding:6px;">
+                    <!-- Columna 2 -->
+                    <div>
+                        <label style="font-weight:bold; font-size:0.9rem;">Situación</label>
+                        <select id="edit-situacion" name="situacion" style="width:100%; margin-bottom:8px;">
+                            <option value="Uso">En Uso</option>
+                            <option value="Desuso">En Desuso</option>
+                        </select>
 
-            <label style="font-weight:bold; font-size:0.9rem;">Año Ingreso</label>
-            <input type="number" id="edit-anio" name="anio_ingreso" style="width:100%; margin-bottom:8px; padding:6px;">
+                        <label style="font-weight:bold; font-size:0.9rem;">Ubicación</label>
+                        <input type="text" id="edit-ubicacion" name="ubicacion" style="width:100%; margin-bottom:8px;">
+                        
+                        <label style="font-weight:bold; font-size:0.9rem;">Responsable</label>
+                        <input type="text" id="edit-responsable" name="responsable" style="width:100%; margin-bottom:8px;">
 
-            <label style="font-weight:bold; font-size:0.9rem;">Observaciones</label>
-            <textarea id="edit-obs" name="observaciones" rows="3" style="width:100%; margin-bottom:8px; padding:6px;"></textarea>
+                        <label style="font-weight:bold; font-size:0.9rem;">Año Ingreso</label>
+                        <input type="number" id="edit-anio" name="anio_ingreso" style="width:100%; margin-bottom:8px;">
 
-            <!-- Foto -->
-            <div style="background:#f1f5f9; padding:10px; border-radius:6px; border:1px dashed #cbd5e1;">
-                <label style="font-size:0.8rem; font-weight:bold;">Cambiar Foto</label>
-                <input type="file" id="edit-foto" style="font-size:0.8rem; width:100%;">
-                <input type="hidden" id="current-image-url">
-                <div style="margin-top:5px; text-align:center;">
-                    <img id="edit-preview" src="" style="width:60px; height:60px; object-fit:cover; border-radius:4px; border:1px solid #ccc;">
+                        <label style="font-weight:bold; font-size:0.9rem;">Observaciones</label>
+                        <textarea id="edit-obs" name="observaciones" rows="3" style="width:100%; margin-bottom:8px;"></textarea>
+
+                        <!-- Foto -->
+                        <div style="background:#f1f5f9; padding:10px; border-radius:6px; border:1px dashed #cbd5e1;">
+                            <label style="font-size:0.8rem; font-weight:bold;">Cambiar Foto</label>
+                            <input type="file" id="edit-foto" accept="image/*" style="font-size:0.8rem; width:100%;">
+                            <input type="hidden" id="current-image-url">
+                            <div style="margin-top:5px; text-align:center;">
+                                <img id="edit-preview" src="" style="width:60px; height:60px; object-fit:cover; border-radius:4px; background:#ddd;">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+
+                <!-- Hiddens -->
+                <input type="hidden" id="edit-tipo" name="tipo">
+                <input type="hidden" id="edit-color" name="color">
+                <input type="hidden" id="edit-dimensiones" name="dimensiones">
+                <input type="hidden" id="edit-otras" name="otras_caracteristicas">
+                <input type="hidden" id="edit-valor" name="valor">
+                <input type="hidden" name="fecha_adquisicion" value="2025-01-01">
+
+                <!-- Botones Acción -->
+                <div style="margin-top: 20px; display: flex; gap: 10px; padding-top: 15px; border-top: 1px solid #eee;">
+                    <button type="button" onclick="handleDelete()" style="background: #ef4444; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">🗑️ Eliminar</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1; padding: 12px; font-weight: bold;">💾 Guardar Cambios</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- Campos ocultos extra -->
-    <input type="hidden" id="edit-tipo" name="tipo">
-    <input type="hidden" id="edit-color" name="color">
-    <input type="hidden" id="edit-dimensiones" name="dimensiones">
-    <input type="hidden" id="edit-otras" name="otras_caracteristicas">
-    <input type="hidden" id="edit-valor" name="valor">
-    <input type="hidden" name="fecha_adquisicion" value="2025-01-01">
+    <!-- PWA Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js'); });
+        }
+    </script>
 
-<!-- Botones de Acción -->
-    <div style="margin-top: 20px; display: flex; gap: 10px; padding-top: 15px; border-top: 1px solid #eee;">
-        
-        <!-- Botón Eliminar (Rojo) -->
-        <button type="button" onclick="handleDelete()" style="background: #ef4444; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">
-            🗑️ Eliminar
-        </button>
-
-        <!-- Botón Guardar (Azul) - Ocupa el resto del espacio -->
-        <button type="submit" class="btn btn-primary" style="flex: 1; padding: 12px; font-weight: bold;">
-            💾 Guardar Cambios
-        </button>
-        
-    </div>
-
-</form>
-        </div>
-    </div>
-
-<!-- Librería para leer Excel -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
     <script type="module" src="js/app.js"></script>
-
-<script>
-    // Registro del Service Worker para PWA
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-                .then(reg => console.log('App lista para instalar', reg.scope))
-                .catch(err => console.log('Error SW:', err));
-        });
-    }
-</script>
-
 </body>
 </html>
