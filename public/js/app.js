@@ -127,7 +127,17 @@ function renderList(list) {
     const currentYear = new Date().getFullYear();
 
     list.forEach(inst => {
-        const isNew = inst.fecha_adquisicion && inst.fecha_adquisicion.startsWith(String(currentYear));
+        // Lógica mejorada: Es nuevo si el AÑO DE INGRESO es el actual.
+// Si no hay año de ingreso, usamos la fecha de adquisición.
+let yearToCheck = currentYear;
+if (inst.anio_ingreso) {
+    yearToCheck = parseInt(inst.anio_ingreso);
+} else if (inst.fecha_adquisicion) {
+    yearToCheck = parseInt(inst.fecha_adquisicion.split('-')[0]);
+}
+
+const isNew = (yearToCheck === currentYear);
+
         const badge = isNew ? `<span class="badge-new">NUEVO ${currentYear}</span>` : '';
         const noImage = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='14' fill='%2394a3b8' dy='.3em' text-anchor='middle'%3ESin Foto%3C/text%3E%3C/svg%3E";
         const imgUrl = (inst.imagen_url && inst.imagen_url.length > 10) ? inst.imagen_url : noImage;
