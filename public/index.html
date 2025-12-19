@@ -1,7 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
     <meta charset="UTF-8">
+
+<!-- PWA Manifest y Color del Tema -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+<link rel="apple-touch-icon" href="icon-192.png"> <!-- Para iPhone -->
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventario Banda Zoila Hora de Robles</title>
     <link rel="stylesheet" href="styles.css">
@@ -187,5 +194,17 @@
 
 <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
     <script type="module" src="js/app.js"></script>
+
+<script>
+    // Registro del Service Worker para PWA
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('App lista para instalar', reg.scope))
+                .catch(err => console.log('Error SW:', err));
+        });
+    }
+</script>
+
 </body>
 </html>
