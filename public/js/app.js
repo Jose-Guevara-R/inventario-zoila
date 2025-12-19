@@ -165,29 +165,20 @@ function renderList(list) {
     });
 }
 
-// --- PDF ---
 // --- GENERADOR PDF (HORIZONTAL / LANDSCAPE) ---
 window.exportPDF = () => {
-    if(!window.jspdf) {
-        alert("Cargando librería PDF, espere unos segundos e intente de nuevo.");
-        return;
-    }
+    if(!window.jspdf) return alert("Cargando librerías...");
     const { jsPDF } = window.jspdf;
     
-    // 'l' = Landscape (Horizontal), 'mm' = milímetros, 'a4' = tamaño hoja
+    // 'l' = Landscape (Horizontal)
     const doc = new jsPDF('l', 'mm', 'a4');
 
-    // Títulos
-    doc.setFontSize(14);
-    doc.text("INVENTARIO FÍSICO DE BIENES PATRIMONIALES - 2025", 14, 15);
-    doc.setFontSize(10);
-    doc.text("I.E. ZOILA HORA DE ROBLES - CHEPÉN", 14, 22);
-    doc.text(`Fecha de Reporte: ${new Date().toLocaleDateString()}`, 250, 22);
+    doc.setFontSize(14); doc.text("INVENTARIO FÍSICO DE BIENES PATRIMONIALES - 2025", 14, 15);
+    doc.setFontSize(10); doc.text("I.E. ZOILA HORA DE ROBLES", 14, 22); doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 250, 22);
 
-    // Definir columnas (Agregamos PROCEDENCIA)
+    // Definir columnas (AQUÍ ESTÁ LA CORRECCIÓN: PROCEDENCIA)
     const headers = [['N°', 'CÓDIGO', 'DENOMINACIÓN', 'MARCA', 'MODELO', 'SERIE', 'COLOR', 'ESTADO', 'SITUACIÓN', 'PROCEDENCIA', 'OBS.']];
     
-    // Mapear datos
     const body = allInstruments.map((i, idx) => [
         idx + 1,
         i.codigo_patrimonial || '-',
@@ -198,25 +189,24 @@ window.exportPDF = () => {
         i.color || '-',
         i.estado,
         i.situacion || 'Uso',
-        i.procedencia || i.origen || '-', // <--- AQUÍ ESTÁ EL DATO NUEVO
+        i.procedencia || i.origen || '-', // <--- ESTE ES EL DATO CLAVE
         i.observaciones || ''
     ]);
 
-    // Generar tabla
     doc.autoTable({
         startY: 28,
         head: headers,
         body: body,
         theme: 'grid',
-        styles: { fontSize: 7, cellPadding: 2, valign: 'middle' }, // Bajé un poco la fuente a 7 para que quepa todo
-        headStyles: { fillColor: [22, 163, 74], textColor: 255, halign: 'center' }, // Verde Cabecera
+        styles: { fontSize: 7, cellPadding: 2, valign: 'middle' },
+        headStyles: { fillColor: [22, 163, 74], textColor: 255, halign: 'center' },
         columnStyles: {
             0: { cellWidth: 8, halign: 'center' },  // N°
             1: { cellWidth: 30 }, // Codigo
             2: { cellWidth: 40 }, // Denominación
             7: { cellWidth: 15, halign: 'center' }, // Estado
             8: { cellWidth: 15, halign: 'center' }, // Situación
-            9: { cellWidth: 25 }, // Procedencia (Nuevo ancho)
+            9: { cellWidth: 25 }, // Procedencia
             10: { cellWidth: 25 } // Observaciones
         }
     });
@@ -244,7 +234,7 @@ window.openEditModal = (id) => {
     setVal('edit-color', inst.color);
     setVal('edit-dimensiones', inst.dimensiones);
     setVal('edit-otras', inst.otras_caracteristicas);
-    setVal('edit-anio', inst.anio_ingreso); // Puede venir null
+    setVal('edit-anio', inst.anio_ingreso);
     setVal('edit-valor', inst.valor);
     setVal('edit-origen', inst.procedencia); 
     setVal('edit-situacion', inst.situacion);
@@ -266,7 +256,7 @@ window.openEditModal = (id) => {
 window.closeModal = () => document.getElementById('editModal').style.display = 'none';
 window.onclick = (e) => { if(e.target == document.getElementById('editModal')) closeModal(); };
 
-// --- UPDATE (AQUÍ ESTÁ LA CORRECCIÓN DEL ERROR NaN) ---
+// --- UPDATE ---
 async function handleEditSubmit(e) {
     e.preventDefault();
     const btn = e.target.querySelector('button[type="submit"]');
@@ -289,26 +279,16 @@ async function handleEditSubmit(e) {
         const data = Object.fromEntries(formData.entries());
         data.imagen_url = finalImageUrl;
         
-        // Corrección Procedencia
+        // Procedencia
         const origEl = document.getElementById('edit-origen');
         if(origEl) data.procedencia = origEl.value;
 
-        // --- CORRECCIÓN CRÍTICA PARA EL ERROR 'NaN' ---
-        // Si el campo está vacío, enviamos null (para año) o 0 (para valor).
-        // NUNCA dejamos que pase undefined o texto vacío a parseInt.
-        
-        if (!data.anio_ingreso || data.anio_ingreso.trim() === "") {
-            data.anio_ingreso = null; 
-        } else {
-            data.anio_ingreso = parseInt(data.anio_ingreso);
-        }
+        // Sanitizar enteros
+        if (!data.anio_ingreso || data.anio_ingreso.trim() === "") data.anio_ingreso = null; 
+        else data.anio_ingreso = parseInt(data.anio_ingreso);
 
-        if (!data.valor || data.valor.trim() === "") {
-            data.valor = 0;
-        } else {
-            data.valor = parseFloat(data.valor);
-        }
-        // ----------------------------------------------
+        if (!data.valor || data.valor.trim() === "") data.valor = 0;
+        else data.valor = parseFloat(data.valor);
 
         btn.innerText = "Guardando...";
         const res = await fetch('/api/update-instrument', {
@@ -318,7 +298,7 @@ async function handleEditSubmit(e) {
         });
 
         if (res.ok) {
-            alert('¡Actualizado con éxito!');
+            alert('¡Actualizado!');
             closeModal();
             loadInstruments();
         } else {
@@ -335,156 +315,76 @@ async function handleEditSubmit(e) {
     }
 }
 
-window.logout = () => {
-    if(confirm('¿Salir?')) {
-        sessionStorage.removeItem('usuario_autorizado');
-        window.location.href = 'login.html';
-    }
-};
-
-// --- FUNCIONES DE IMPORTACIÓN EXCEL ---
-
-// 1. Descargar Plantilla Vacía
-window.downloadTemplate = () => {
-    const headers = [
-        {
-            "CÓDIGO PATRIMONIAL": "392205190001",
-            "DENOMINACIÓN (NOMBRE)": "BOMBO",
-            "MARCA": "HOFFER",
-            "MODELO": "H-200",
-            "SERIE": "SN12345",
-            "COLOR": "NEGRO",
-            "ESTADO (NUEVO/BUENO/REGULAR/MALO)": "REGULAR",
-            "SITUACIÓN (Uso/Desuso)": "Uso",
-            "AÑO INGRESO": 2018,
-            "VALOR S/": 350.00,
-            "PROCEDENCIA": "Donac. APAFA",
-            "UBICACIÓN": "DEP. MÚSICA",
-            "RESPONSABLE": "Profesor",
-            "OBSERVACIONES": "Parche roto"
-        }
-    ];
-
-    const ws = XLSX.utils.json_to_sheet(headers);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Plantilla");
-    XLSX.writeFile(wb, "Plantilla_Inventario_ZoilaHora.xlsx");
-};
-
-// 2. Procesar Excel Subido
-window.handleExcelUpload = async (input) => {
-    const file = input.files[0];
-    if (!file) return;
-
-    if (!confirm('¿Seguro que deseas importar este archivo? Se agregarán los instrumentos a la base de datos.')) {
-        input.value = "";
-        return;
-    }
-
-    const reader = new FileReader();
-    
-    reader.onload = async (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        
-        // Leer la primera hoja
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        
-        // Convertir a JSON
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-        if (jsonData.length === 0) {
-            alert("El archivo está vacío.");
-            return;
-        }
-
-        // MAPEO DE COLUMNAS (Excel -> Base de Datos)
-        // Esto es importante porque en el Excel las columnas tienen nombres bonitos con tildes
-        const mappedData = jsonData.map(row => ({
-            codigo_patrimonial: row["CÓDIGO PATRIMONIAL"] || '',
-            nombre: row["DENOMINACIÓN (NOMBRE)"] || 'SIN NOMBRE',
-            marca: row["MARCA"] || '',
-            modelo: row["MODELO"] || '',
-            serie: row["SERIE"] || '',
-            color: row["COLOR"] || '',
-            estado: (row["ESTADO (NUEVO/BUENO/REGULAR/MALO)"] || 'REGULAR').toUpperCase(),
-            situacion: row["SITUACIÓN (Uso/Desuso)"] || 'Uso',
-            anio_ingreso: row["AÑO INGRESO"],
-            valor: row["VALOR S/"],
-            procedencia: row["PROCEDENCIA"] || '',
-            ubicacion: row["UBICACIÓN"] || 'ALMACEN',
-            responsable: row["RESPONSABLE"] || '',
-            observaciones: row["OBSERVACIONES"] || ''
-        }));
-
-        // Enviar al Backend
-        try {
-            // Mostrar indicador de carga visual
-            const prevText = document.querySelector('label[for="excel-input"]').innerText;
-            document.querySelector('label[for="excel-input"]').innerText = "⏳ Subiendo...";
-
-            const response = await fetch('/api/import-excel', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(mappedData)
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                alert(`✅ Éxito: ${result.message}`);
-                loadInstruments(); // Recargar la tabla
-            } else {
-                alert(`❌ Error: ${result.error}`);
-            }
-
-        } catch (error) {
-            console.error(error);
-            alert("Error de conexión al importar.");
-        } finally {
-            input.value = ""; // Limpiar input para permitir subir el mismo archivo si se corrige
-            document.querySelector('label[for="excel-input"]').innerText = "📤 Subir Excel con Datos";
-        }
-    };
-
-    reader.readAsArrayBuffer(file);
-};
-
-// --- FUNCIÓN ELIMINAR INSTRUMENTO ---
+// --- DELETE ---
 window.handleDelete = async () => {
     const id = document.getElementById('edit-id').value;
     const nombre = document.getElementById('edit-nombre').value;
 
-    // 1. Doble confirmación por seguridad
-    if (!confirm(`⚠️ ¡CUIDADO!\n\nEstás a punto de ELIMINAR DEFINITIVAMENTE el instrumento:\n"${nombre}"\n\n¿Estás realmente seguro? Esta acción no se puede deshacer.`)) {
-        return;
-    }
+    if (!confirm(`⚠️ ¡CUIDADO!\n\n¿Eliminar definitivamente el instrumento "${nombre}"?\nEsta acción no se deshace.`)) return;
 
     try {
-        // Indicador visual
         const btnDelete = document.querySelector('button[onclick="handleDelete()"]');
-        const originalText = btnDelete.innerText;
+        const txt = btnDelete.innerText;
         btnDelete.innerText = "Eliminando...";
         btnDelete.disabled = true;
 
-        // 2. Llamada a la API
-        const res = await fetch(`/api/delete-instrument?id=${id}`, {
-            method: 'DELETE'
-        });
+        const res = await fetch(`/api/delete-instrument?id=${id}`, { method: 'DELETE' });
 
         if (res.ok) {
-            alert('✅ Instrumento eliminado correctamente.');
+            alert('✅ Eliminado.');
             closeModal();
-            loadInstruments(); // Recargar lista
+            loadInstruments();
         } else {
             const data = await res.json();
-            alert('❌ Error al eliminar: ' + (data.error || 'Desconocido'));
-            btnDelete.innerText = originalText;
+            alert('❌ Error: ' + (data.error || 'Desconocido'));
+            btnDelete.innerText = txt;
             btnDelete.disabled = false;
         }
     } catch (error) {
-        console.error(error);
-        alert('Error de conexión al intentar eliminar.');
+        alert('Error de conexión.');
     }
 };
+
+window.downloadTemplate = () => {
+    const headers = [{ "CÓDIGO PATRIMONIAL": "3922...", "DENOMINACIÓN (NOMBRE)": "BOMBO", "MARCA": "YAMAHA", "MODELO": "X", "SERIE": "123", "COLOR": "NEGRO", "ESTADO (NUEVO/BUENO/REGULAR/MALO)": "REGULAR", "SITUACIÓN (Uso/Desuso)": "Uso", "AÑO INGRESO": 2018, "VALOR S/": 350, "PROCEDENCIA": "Donac. APAFA", "UBICACIÓN": "ALMACEN", "RESPONSABLE": "Profesor", "OBSERVACIONES": "Ninguna" }];
+    const ws = XLSX.utils.json_to_sheet(headers);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Plantilla");
+    XLSX.writeFile(wb, "Plantilla_Inventario.xlsx");
+};
+
+window.handleExcelUpload = async (input) => {
+    const file = input.files[0];
+    if (!file) return;
+    if (!confirm('¿Importar archivo?')) { input.value = ""; return; }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+
+        const mappedData = jsonData.map(row => ({
+            codigo_patrimonial: row["CÓDIGO PATRIMONIAL"] || '',
+            nombre: row["DENOMINACIÓN (NOMBRE)"] || 'SIN NOMBRE',
+            marca: row["MARCA"] || '', modelo: row["MODELO"] || '', serie: row["SERIE"] || '', color: row["COLOR"] || '',
+            estado: (row["ESTADO (NUEVO/BUENO/REGULAR/MALO)"] || 'REGULAR').toUpperCase(),
+            situacion: row["SITUACIÓN (Uso/Desuso)"] || 'Uso',
+            anio_ingreso: row["AÑO INGRESO"], valor: row["VALOR S/"],
+            procedencia: row["PROCEDENCIA"] || '', ubicacion: row["UBICACIÓN"] || 'ALMACEN',
+            responsable: row["RESPONSABLE"] || '', observaciones: row["OBSERVACIONES"] || ''
+        }));
+
+        try {
+            document.querySelector('label[for="excel-input"]').innerText = "⏳ Subiendo...";
+            const res = await fetch('/api/import-excel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(mappedData) });
+            const result = await res.json();
+            if (res.ok) { alert(`✅ Éxito: ${result.message}`); loadInstruments(); } 
+            else alert(`❌ Error: ${result.error}`);
+        } catch (error) { alert("Error conexión."); } 
+        finally { input.value = ""; document.querySelector('label[for="excel-input"]').innerText = "📤 Subir Excel"; }
+    };
+    reader.readAsArrayBuffer(file);
+};
+
+window.logout = () => { if(confirm('¿Salir?')) { sessionStorage.removeItem('usuario_autorizado'); window.location.href = 'login.html'; } };
