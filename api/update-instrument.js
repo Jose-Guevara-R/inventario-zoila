@@ -1,6 +1,7 @@
 const pool = require('./db');
 
 module.exports = async (req, res) => {
+  // Configuración de CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'PUT, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -14,10 +15,22 @@ module.exports = async (req, res) => {
       origen, procedencia, anio_ingreso, valor 
     } = req.body;
 
-    // 1. SANITIZACIÓN (Crucial para evitar Error 500)
-    const anioSeguro = (anio_ingreso === '' || anio_ingreso === undefined) ? null : parseInt(anio_ingreso);
-    const valorSeguro = (valor === '' || valor === undefined) ? 0.00 : parseFloat(valor);
+    // --- SANITIZACIÓN BLINDADA (AQUÍ ESTÁ LA SOLUCIÓN) ---
+    
+    // 1. Procedencia: Aceptamos cualquiera de los dos campos
     const procedenciaFinal = procedencia || origen || '';
+
+    // 2. Año de Ingreso: Si es vacío, null, undefined O "NaN", lo volvemos NULL
+    let anioSeguro = null;
+    if (anio_ingreso && String(anio_ingreso).trim() !== '' && !isNaN(parseInt(anio_ingreso))) {
+        anioSeguro = parseInt(anio_ingreso);
+    }
+
+    // 3. Valor: Si es vacío, null, undefined O "NaN", lo volvemos 0.00
+    let valorSeguro = 0.00;
+    if (valor && String(valor).trim() !== '' && !isNaN(parseFloat(valor))) {
+        valorSeguro = parseFloat(valor);
+    }
 
     const query = `
       UPDATE instrumentos 
