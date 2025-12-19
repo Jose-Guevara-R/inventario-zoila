@@ -303,3 +303,112 @@ window.logout = () => {
         window.location.href = 'login.html';
     }
 };
+
+// --- FUNCIONES DE IMPORTACIÓN EXCEL ---
+
+// 1. Descargar Plantilla Vacía
+window.downloadTemplate = () => {
+    const headers = [
+        {
+            "CÓDIGO PATRIMONIAL": "392205190001",
+            "DENOMINACIÓN (NOMBRE)": "BOMBO",
+            "MARCA": "HOFFER",
+            "MODELO": "H-200",
+            "SERIE": "SN12345",
+            "COLOR": "NEGRO",
+            "ESTADO (NUEVO/BUENO/REGULAR/MALO)": "REGULAR",
+            "SITUACIÓN (Uso/Desuso)": "Uso",
+            "AÑO INGRESO": 2018,
+            "VALOR S/": 350.00,
+            "PROCEDENCIA": "Donac. APAFA",
+            "UBICACIÓN": "DEP. MÚSICA",
+            "RESPONSABLE": "Profesor",
+            "OBSERVACIONES": "Parche roto"
+        }
+    ];
+
+    const ws = XLSX.utils.json_to_sheet(headers);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Plantilla");
+    XLSX.writeFile(wb, "Plantilla_Inventario_ZoilaHora.xlsx");
+};
+
+// 2. Procesar Excel Subido
+window.handleExcelUpload = async (input) => {
+    const file = input.files[0];
+    if (!file) return;
+
+    if (!confirm('¿Seguro que deseas importar este archivo? Se agregarán los instrumentos a la base de datos.')) {
+        input.value = "";
+        return;
+    }
+
+    const reader = new FileReader();
+    
+    reader.onload = async (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        
+        // Leer la primera hoja
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        
+        // Convertir a JSON
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        if (jsonData.length === 0) {
+            alert("El archivo está vacío.");
+            return;
+        }
+
+        // MAPEO DE COLUMNAS (Excel -> Base de Datos)
+        // Esto es importante porque en el Excel las columnas tienen nombres bonitos con tildes
+        const mappedData = jsonData.map(row => ({
+            codigo_patrimonial: row["CÓDIGO PATRIMONIAL"] || '',
+            nombre: row["DENOMINACIÓN (NOMBRE)"] || 'SIN NOMBRE',
+            marca: row["MARCA"] || '',
+            modelo: row["MODELO"] || '',
+            serie: row["SERIE"] || '',
+            color: row["COLOR"] || '',
+            estado: (row["ESTADO (NUEVO/BUENO/REGULAR/MALO)"] || 'REGULAR').toUpperCase(),
+            situacion: row["SITUACIÓN (Uso/Desuso)"] || 'Uso',
+            anio_ingreso: row["AÑO INGRESO"],
+            valor: row["VALOR S/"],
+            procedencia: row["PROCEDENCIA"] || '',
+            ubicacion: row["UBICACIÓN"] || 'ALMACEN',
+            responsable: row["RESPONSABLE"] || '',
+            observaciones: row["OBSERVACIONES"] || ''
+        }));
+
+        // Enviar al Backend
+        try {
+            // Mostrar indicador de carga visual
+            const prevText = document.querySelector('label[for="excel-input"]').innerText;
+            document.querySelector('label[for="excel-input"]').innerText = "⏳ Subiendo...";
+
+            const response = await fetch('/api/import-excel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(mappedData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert(`✅ Éxito: ${result.message}`);
+                loadInstruments(); // Recargar la tabla
+            } else {
+                alert(`❌ Error: ${result.error}`);
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert("Error de conexión al importar.");
+        } finally {
+            input.value = ""; // Limpiar input para permitir subir el mismo archivo si se corrige
+            document.querySelector('label[for="excel-input"]').innerText = "📤 Subir Excel con Datos";
+        }
+    };
+
+    reader.readAsArrayBuffer(file);
+};
