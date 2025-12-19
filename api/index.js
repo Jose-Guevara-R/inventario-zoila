@@ -4,12 +4,12 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 
-
 // Importar funciones
 const getInstruments = require('./get-instruments');
 const addInstrument = require('./add-instrument');
 const updateInstrument = require('./update-instrument');
 const importExcel = require('./import-excel');
+const deleteInstrument = require('./delete-instrument'); // <--- NUEVO
 
 const server = http.createServer((req, res) => {
     // Helpers
@@ -18,34 +18,38 @@ const server = http.createServer((req, res) => {
 
     const parsedUrl = url.parse(req.url, true);
 
-if (parsedUrl.pathname === '/api/import-excel' && req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => { body += chunk.toString(); });
-    req.on('end', () => {
-        try { req.body = JSON.parse(body); } catch (e) { req.body = []; }
-        return importExcel(req, res);
-    });
-    return;
-}
-
     // CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS, DELETE');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // <--- AGREGADO DELETE
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
-    // API
+    // --- RUTAS API ---
+    
+    // GET
     if (parsedUrl.pathname === '/api/get-instruments' && req.method === 'GET') return getInstruments(req, res);
     
+    // DELETE (Nuevo)
+    if (parsedUrl.pathname === '/api/delete-instrument' && req.method === 'DELETE') {
+        // Pasamos req con query params
+        req.query = parsedUrl.query; 
+        return deleteInstrument(req, res);
+    }
+
+    // POST y PUT (Requieren body)
     if ((parsedUrl.pathname === '/api/add-instrument' && req.method === 'POST') ||
-        (parsedUrl.pathname === '/api/update-instrument' && req.method === 'PUT')) {
+        (parsedUrl.pathname === '/api/update-instrument' && req.method === 'PUT') ||
+        (parsedUrl.pathname === '/api/import-excel' && req.method === 'POST')) {
+        
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
         req.on('end', () => {
             try { req.body = JSON.parse(body); } catch (e) { req.body = {}; }
+            
             if (parsedUrl.pathname === '/api/add-instrument') return addInstrument(req, res);
             if (parsedUrl.pathname === '/api/update-instrument') return updateInstrument(req, res);
+            if (parsedUrl.pathname === '/api/import-excel') return importExcel(req, res);
         });
         return;
     }

@@ -412,3 +412,41 @@ window.handleExcelUpload = async (input) => {
 
     reader.readAsArrayBuffer(file);
 };
+
+// --- FUNCIÓN ELIMINAR INSTRUMENTO ---
+window.handleDelete = async () => {
+    const id = document.getElementById('edit-id').value;
+    const nombre = document.getElementById('edit-nombre').value;
+
+    // 1. Doble confirmación por seguridad
+    if (!confirm(`⚠️ ¡CUIDADO!\n\nEstás a punto de ELIMINAR DEFINITIVAMENTE el instrumento:\n"${nombre}"\n\n¿Estás realmente seguro? Esta acción no se puede deshacer.`)) {
+        return;
+    }
+
+    try {
+        // Indicador visual
+        const btnDelete = document.querySelector('button[onclick="handleDelete()"]');
+        const originalText = btnDelete.innerText;
+        btnDelete.innerText = "Eliminando...";
+        btnDelete.disabled = true;
+
+        // 2. Llamada a la API
+        const res = await fetch(`/api/delete-instrument?id=${id}`, {
+            method: 'DELETE'
+        });
+
+        if (res.ok) {
+            alert('✅ Instrumento eliminado correctamente.');
+            closeModal();
+            loadInstruments(); // Recargar lista
+        } else {
+            const data = await res.json();
+            alert('❌ Error al eliminar: ' + (data.error || 'Desconocido'));
+            btnDelete.innerText = originalText;
+            btnDelete.disabled = false;
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Error de conexión al intentar eliminar.');
+    }
+};
