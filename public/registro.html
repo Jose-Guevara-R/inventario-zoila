@@ -98,7 +98,8 @@
             <div class="form-group" style="background: #e0f2fe; padding: 15px; border-radius: 8px; margin-top:15px; border: 1px dashed #0284c7;">
                 <label style="color:#0369a1; font-weight:bold;">📸 Fotografía (Cámara o Galería)</label>
                 <!-- accept="image/*" permite abrir la cámara en móviles -->
-                <input type="file" id="foto-input" accept="image/*" style="margin-top:10px;">
+                <!-- capture="environment" obliga a usar la cámara trasera -->
+<input type="file" id="foto-input" accept="image/*" capture="environment" style="margin-top:10px;">
                 <p style="font-size: 0.8rem; color: #0369a1; margin-top: 5px;">
                     ⚡ La imagen se comprimirá automáticamente para ahorrar datos.
                 </p>
